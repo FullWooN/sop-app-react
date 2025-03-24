@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>For You </title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+            touch-action: manipulation;
+        }
+        
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        
+        #content {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 2;
+            color: white;
+            text-align: center;
+            pointer-events: none;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.5);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 1s ease;
+        }
+        
+        p {
+            font-size: 1.2rem;
+            max-width: 80%;
+            margin-bottom: 2rem;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 1s ease 0.3s;
+        }
+        
+        .btn {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid white;
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            pointer-events: auto;
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 1s ease 0.6s;
+        }
+        
+        .btn:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        .visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        #heart-container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 3;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 1s ease;
+        }
+        
+        #heart-message {
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 2rem;
+            border-radius: 15px;
+            max-width: 80%;
+            backdrop-filter: blur(5px);
+            transform: scale(0.5);
+            transition: transform 0.5s ease;
+        }
+        
+        #heart-message.visible {
+            transform: scale(1);
+        }
+        
+        #close-btn {
+            margin-top: 1rem;
+            background-color: #ff3366;
+            border: none;
+            pointer-events: auto;
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            p {
+                font-size: 1rem;
+            }
+            
+            .btn {
+                padding: 10px 25px;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container"></div>
+    
+    <div id="content">
+        <h1>To Lily</h1>
+        <p>Every time I see you, my heart skips a beat...<br> | <br>| <br> | <br>|<br> v</p>
+        <button class="btn" id="confessBtn">I Have Something to Tell You</button>
+    </div>
+    
+    <div id="heart-container">
+        <div id="heart-message">
+            <h2>Mau ga jadi pacar gua ?</h2>
+            <p>More than words can express, more than stars in the sky.</p>
+            <p>Will you be mine?</p>
+            <button class="btn" id="close-btn">Close</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.min.js"></script>
+    <script>
+        // Wait for DOM to load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Make content visible
+            setTimeout(() => {
+                document.querySelectorAll('#content h1, #content p, #content .btn').forEach(el => {
+                    el.classList.add('visible');
+                });
+            }, 500);
+            
+            // Three.js setup
+            const container = document.getElementById('canvas-container');
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            container.appendChild(renderer.domElement);
+            
+            // Particles
+            const particleCount = 1500;
+            const particles = new THREE.BufferGeometry();
+            const positions = new Float32Array(particleCount * 3);
+            const colors = new Float32Array(particleCount * 3);
+            const sizes = new Float32Array(particleCount);
+            
+            const color = new THREE.Color();
+            
+            for (let i = 0; i < particleCount; i++) {
+                // Positions
+                positions[i * 3] = (Math.random() - 0.5) * 2000;
+                positions[i * 3 + 1] = (Math.random() - 0.5) * 2000;
+                positions[i * 3 + 2] = (Math.random() - 0.5) * 2000;
+                
+                // Colors
+                const hue = Math.random() * 0.2 + 0.9; // Pink/red hues
+                color.setHSL(hue, 0.8, 0.6);
+                colors[i * 3] = color.r;
+                colors[i * 3 + 1] = color.g;
+                colors[i * 3 + 2] = color.b;
+                
+                // Sizes
+                sizes[i] = Math.random() * 3 + 1;
+            }
+            
+            particles.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            particles.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+            particles.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+            
+            const particleMaterial = new THREE.PointsMaterial({
+                size: 2,
+                vertexColors: true,
+                transparent: true,
+                opacity: 0.8,
+                blending: THREE.AdditiveBlending
+            });
+            
+            const particleSystem = new THREE.Points(particles, particleMaterial);
+            scene.add(particleSystem);
+            
+            // Heart geometry
+            const heartShape = new THREE.Shape();
+            const x = 0, y = 0;
+            heartShape.moveTo(x + 0.25, y + 0.25);
+            heartShape.bezierCurveTo(x + 0.25, y + 0.25, x + 0.2, y, x, y);
+            heartShape.bezierCurveTo(x - 0.6, y, x - 0.6, y + 0.7, x - 0.6, y + 0.7);
+            heartShape.bezierCurveTo(x - 0.6, y + 1.1, x - 0.3, y + 1.54, x + 0.25, y + 1.9);
+            heartShape.bezierCurveTo(x + 0.8, y + 1.54, x + 1.1, y + 1.1, x + 1.1, y + 0.7);
+            heartShape.bezierCurveTo(x + 1.1, y + 0.7, x + 1.1, y, x + 0.5, y);
+            heartShape.bezierCurveTo(x + 0.35, y, x + 0.25, y + 0.25, x + 0.25, y + 0.25);
+            
+            const extrudeSettings = {
+                steps: 2,
+                depth: 0.5,
+                bevelEnabled: true,
+                bevelThickness: 0.1,
+                bevelSize: 0.1,
+                bevelOffset: 0,
+                bevelSegments: 5
+            };
+            
+            const heartGeometry = new THREE.ExtrudeGeometry(heartShape, extrudeSettings);
+            const heartMaterial = new THREE.MeshPhongMaterial({
+                color: 0xff3366,
+                emissive: 0xff0040,
+                specular: 0xff6666,
+                shininess: 30,
+                flatShading: true
+            });
+            
+            const heart = new THREE.Mesh(heartGeometry, heartMaterial);
+            heart.scale.set(10, 10, 10);
+            heart.position.z = -50;
+            heart.visible = false;
+            scene.add(heart);
+            
+            // Lights
+            const ambientLight = new THREE.AmbientLight(0x404040);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+            directionalLight.position.set(1, 1, 1);
+            scene.add(directionalLight);
+            
+            const pointLight = new THREE.PointLight(0xff3366, 2, 50);
+            pointLight.position.set(0, 0, 10);
+            scene.add(pointLight);
+            
+            camera.position.z = 30;
+            
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+            
+            // Animation loop
+            function animate() {
+                requestAnimationFrame(animate);
+                
+                // Rotate particles
+                particleSystem.rotation.x += 0.0005;
+                particleSystem.rotation.y += 0.001;
+                
+                // Rotate heart if visible
+                if (heart.visible) {
+                    heart.rotation.y += 0.01;
+                    heart.rotation.z += 0.005;
+                }
+                
+                renderer.render(scene, camera);
+            }
+            
+            animate();
+            
+            // Button interactions
+            const confessBtn = document.getElementById('confessBtn');
+            const heartContainer = document.getElementById('heart-container');
+            const closeBtn = document.getElementById('close-btn');
+            
+            confessBtn.addEventListener('click', function() {
+                // Hide content
+                document.getElementById('content').style.opacity = '0';
+                document.getElementById('content').style.pointerEvents = 'none';
+                
+                // Show heart
+                heart.visible = true;
+                heartContainer.style.opacity = '1';
+                document.getElementById('heart-message').classList.add('visible');
+                
+                // Animate particles towards heart
+                gsap.to(particleSystem.rotation, { 
+                    x: 0, 
+                    y: 0, 
+                    duration: 2, 
+                    ease: "power2.out" 
+                });
+                
+                // Position camera to focus on heart
+                gsap.to(camera.position, { 
+                    z: 25, 
+                    duration: 2, 
+                    ease: "power2.out" 
+                });
+            });
+            
+            closeBtn.addEventListener('click', function() {
+                heartContainer.style.opacity = '0';
+                document.getElementById('heart-message').classList.remove('visible');
+                
+                // Return to original view
+                setTimeout(() => {
+                    heart.visible = false;
+                    document.getElementById('content').style.opacity = '1';
+                    document.getElementById('content').style.pointerEvents = 'auto';
+                }, 500);
+            });
+            
+            // Add GSAP for animations
+            const script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.7.1/gsap.min.js';
+            document.head.appendChild(script);
+        });
+    </script>
+</body>
+</html>
